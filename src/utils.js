@@ -138,7 +138,8 @@ export const peopleTasksToDayMap = async (people, tasks) => {
         for (const entry of existingMap) {
             map[entry.day.S].push({
                 "Person": entry.person.S,
-                'Task': entry.task.S
+                'Task': entry.task.S,
+                "done": entry.done.BOOL
             })
         }
         return map;
@@ -189,7 +190,8 @@ export const peopleTasksToDayMap = async (people, tasks) => {
                 if (!assignedTasksPerDay[day].has(taskId)) {
                     map[day].push({
                         "Person": person.name,
-                        "Task": taskIdToName[taskId]
+                        "Task": taskIdToName[taskId],
+                        "done": false
                     });
                     assignedTasksPerDay[day].add(taskId);
 
@@ -197,7 +199,8 @@ export const peopleTasksToDayMap = async (people, tasks) => {
                         "id": {"N": incrementingId.toString()},
                         "day": {"S": day},
                         "person": {"S": person.name},
-                        "task": {"S": taskIdToName[taskId]}
+                        "task": {"S": taskIdToName[taskId]},
+                        "done": {"BOOL": false}
                     };
                     dbUploads.push(dbEntry);
                     incrementingId++;

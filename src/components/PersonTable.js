@@ -1,12 +1,9 @@
 import React from 'react';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import Paper from '@mui/material/Paper';
-
+import { 
+    TableContainer, Paper, Table, TableHead, TableBody, 
+    TableRow, TableCell, Button, IconButton 
+  } from '@mui/material';
+  import CheckIcon from '@mui/icons-material/Check';
 const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 function PersonTable({ map }) {
@@ -17,7 +14,8 @@ function PersonTable({ map }) {
           <TableRow>
             <TableCell sx={{ width: '100px'}}>Day</TableCell>
             <TableCell sx={{ width: '100px'}}>Person</TableCell>
-            <TableCell>Task</TableCell>
+            <TableCell sx={{ width: '150px'}}>Task</TableCell>
+            <TableCell>Done</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -31,6 +29,20 @@ function PersonTable({ map }) {
                 )}
                 <TableCell>{assignment.Person}</TableCell>
                 <TableCell>{assignment.Task}</TableCell>
+                <TableCell>
+                    {assignment.done ? (
+                        <IconButton color="primary" aria-label = "done">
+                            <CheckIcon />
+                        </IconButton>
+                    ) : (
+                        <Button
+                            variant="contained"
+                            onClick={() => {console.log("clicked");}}
+                        >
+                            Mark as done
+                        </Button>
+                    )}
+                </TableCell>
               </TableRow>
             ))
           ))}
