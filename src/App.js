@@ -1,24 +1,34 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useState, useEffect } from 'react';
+import PersonTable from './components/PersonTable';
+import { ThemeProvider, createTheme} from '@mui/material/styles'
+import { CssBaseline } from '@mui/material';
+import { getTable, peopleTasksToDayMap } from './utils';
 
 function App() {
+  const [map, setMap] = useState({});
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const fetchedPeople = await getTable('people');
+      const fetchedTasks = await getTable('task_list');
+      const sourcedMap = await peopleTasksToDayMap(fetchedPeople, fetchedTasks);
+      setMap(sourcedMap);
+    };
+
+    fetchData();
+  }, []);
+
+  const theme = createTheme();
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <div className="App">
+        <h1>Task list for the week</h1>
+        <PersonTable map={map} />
+      </div>
+    </ThemeProvider>
+    
   );
 }
 
