@@ -4,6 +4,7 @@ import {
     TableRow, TableCell, Button, IconButton 
   } from '@mui/material';
   import CheckIcon from '@mui/icons-material/Check';
+import { uploadImageAndUpdateSchedule } from '../utils';
 const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 function PersonTable({ map }) {
@@ -30,19 +31,41 @@ function PersonTable({ map }) {
                 <TableCell>{assignment.Person}</TableCell>
                 <TableCell>{assignment.Task}</TableCell>
                 <TableCell>
-                    {assignment.done ? (
-                        <IconButton color="primary" aria-label = "done">
-                            <CheckIcon />
-                        </IconButton>
-                    ) : (
-                        <Button
-                            variant="contained"
-                            onClick={() => {console.log("clicked");}}
-                        >
-                            Mark as done
-                        </Button>
-                    )}
+                {assignment.done === "2" ? (
+                    <IconButton color="primary" aria-label="done">
+                    <CheckIcon />
+                    </IconButton>
+                ) : assignment.done === "1" ? (
+                    <Button
+                    variant="contained"
+                    color="secondary"
+                    onClick={() => {
+                        window.open(assignment.photo_link);
+                    }}
+                    >
+                    Approve
+                    </Button>
+                ) : (
+                    <Button
+                    variant="contained"
+                    component="label"
+                    >
+                    Mark as done
+                    <input 
+                        type="file"
+                        hidden
+                        accept="image/*"
+                        onChange={(event) => {
+                            const file = event.target.files[0];
+                            if (file) {
+                                uploadImageAndUpdateSchedule(file, assignment);
+                            }
+                        }}
+                    />
+                    </Button>
+                )}
                 </TableCell>
+
               </TableRow>
             ))
           ))}

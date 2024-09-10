@@ -23,6 +23,81 @@ export const postVal = async (tableName, item) => {
       throw error; // Re-throw the error so it can be handled by the caller
     }
   };
+
+  export const updateVal = async (tableName, id, key, value) => {
+    const full = {
+        "TableName": tableName,
+        "id": id,
+        "attribute": key,
+        "value": value
+    }
+    console.log('update full:', full);
+    try {
+        const response = await fetch(`https://s7oq8jma2i.execute-api.us-west-2.amazonaws.com/default/createMappings`, {
+            method: 'PUT',
+            headers: {
+            'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(full)
+        });
+    
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+    
+        const data = await response.json();
+        return data; // This will be the response from the server
+    } catch (error) {
+      console.error("There was a problem with the fetch operation:", error);
+      throw error; // Re-throw the error so it can be handled by the caller
+    }
+  }
+
+  export const uploadImageAndUpdateSchedule = async (image, assignment) => {
+    console.log("assignment:", assignment);
+    try {
+        const base64Image = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result.split(',')[1]);
+            reader.onerror = error => reject(error);
+            reader.readAsDataURL(image);
+        });
+
+        const full = {
+            "fileName": (() => {
+                const timestamp = Date.now();
+                const randomString = Math.random().toString(36).substring(2, 8);
+                return `file_${timestamp}_${randomString}.jpg`;
+                })(),
+            "file": base64Image
+        }
+        const response = await fetch(`https://n8kpjk7bac.execute-api.us-west-2.amazonaws.com/default/uploadS3/upload`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(full)
+          });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+      
+        const urlData = await response.json();
+        const url = JSON.parse(urlData['body'])['url'];
+
+        await updateVal("Schedule", assignment.id, "photo_link", url);
+        const finalVal = await updateVal("Schedule", assignment.id, "done", "1");
+
+        window.location.reload();
+        
+        
+
+        } catch (error) {
+          console.error("There was a problem with the fetch operation:", error);
+          throw error; // Re-throw the error so it can be handled by the caller
+        }
+    }
   
 
 export const getTable = async (tableName) => {
@@ -139,7 +214,9 @@ export const peopleTasksToDayMap = async (people, tasks) => {
             map[entry.day.S].push({
                 "Person": entry.person.S,
                 'Task': entry.task.S,
-                "done": entry.done.BOOL
+                "done": entry.done.N,
+                "id": entry.id.N,
+                "photo_link": entry.photo_link.S
             })
         }
         return map;
@@ -191,7 +268,9 @@ export const peopleTasksToDayMap = async (people, tasks) => {
                     map[day].push({
                         "Person": person.name,
                         "Task": taskIdToName[taskId],
-                        "done": false
+                        "done": "0",
+                        "id": incrementingId,
+                        "photo_link": ""
                     });
                     assignedTasksPerDay[day].add(taskId);
 
@@ -200,7 +279,8 @@ export const peopleTasksToDayMap = async (people, tasks) => {
                         "day": {"S": day},
                         "person": {"S": person.name},
                         "task": {"S": taskIdToName[taskId]},
-                        "done": {"BOOL": false}
+                        "done": {"N": "0"},
+                        "photo_link": {"S": ""}
                     };
                     dbUploads.push(dbEntry);
                     incrementingId++;
