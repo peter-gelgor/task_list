@@ -1,13 +1,26 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
     TableContainer, Paper, Table, TableHead, TableBody, 
-    TableRow, TableCell, Button, IconButton 
+    TableRow, TableCell, Button, IconButton, 
+    Dialog,
+    DialogContent,
+    DialogContentText,
+    DialogTitle,
+    DialogActions,
+    TextField
   } from '@mui/material';
   import CheckIcon from '@mui/icons-material/Check';
-import { uploadImageAndUpdateSchedule } from '../utils';
+import { updateVal, uploadImageAndUpdateSchedule } from '../utils';
+
+import MarkAsDone from './MarkAsDone';
 const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
+
+
 function PersonTable({ map }) {
+  const [open, setOpen] = useState(false);
+  const [userName, setUserName] = useState('');
+
   return (
     <TableContainer component={Paper}>
       <Table sx={{ minWidth: 650 }} aria-label="task assignment table">
@@ -17,6 +30,8 @@ function PersonTable({ map }) {
             <TableCell sx={{ width: '100px'}}>Person</TableCell>
             <TableCell sx={{ width: '150px'}}>Task</TableCell>
             <TableCell>Done</TableCell>
+            <TableCell>Completed by</TableCell>
+            <TableCell>Approved By</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -36,35 +51,66 @@ function PersonTable({ map }) {
                     <CheckIcon />
                     </IconButton>
                 ) : assignment.done === "1" ? (
+                  <div>
                     <Button
-                    variant="contained"
-                    color="secondary"
-                    onClick={() => {
-                        window.open(assignment.photo_link);
-                    }}
-                    >
-                    Approve
-                    </Button>
+                        variant="contained"
+                        color="secondary"
+                        onClick={() => {
+                          console.log(assignment.photo_link);
+                          window.open(assignment.photo_link);
+                          setOpen(true);
+                        } }
+                      >
+                        Approve
+                      </Button>
+                      <Dialog open={open} onClose={() => setOpen(false)}>
+                      <DialogTitle>Approve Task</DialogTitle>
+                      <DialogContent>
+                        <DialogContentText>
+                          Do you want to approve this task?
+                        </DialogContentText>
+                        <TextField
+                          autoFocus
+                          margin="dense"
+                          id="name"
+                          label="Your name"
+                          type="text"
+                          fullWidth
+                          value={userName}
+                          onChange={(e) => setUserName(e.target.value)}
+                        />
+                      </DialogContent>
+                      <DialogActions>
+                        <Button onClick={async () => {
+                          if (userName !== "") {
+                            await updateVal("Schedule", assignment.id, "approved_by", userName + " (DISAPPROVED)");
+                            await updateVal("Schedule", assignment.id, "done", 0);
+                            window.location.reload();
+                          }
+                          else {
+                            alert("you need to provide your name to disaprove");
+                          }
+                          }}>No</Button>
+                        <Button onClick={async () => {
+                          if (userName !== "") {
+                            await updateVal("Schedule", assignment.id, "approved_by", userName);
+                            await updateVal("Schedule", assignment.id, "done", 2);
+                            window.location.reload();
+                          }
+                          else {
+                            alert("you need to provide your name to approve");
+                          }
+                        }}>Yes</Button>
+                      </DialogActions>
+                    </Dialog>
+                  </div>
+                    
                 ) : (
-                    <Button
-                    variant="contained"
-                    component="label"
-                    >
-                    Mark as done
-                    <input 
-                        type="file"
-                        hidden
-                        accept="image/*"
-                        onChange={(event) => {
-                            const file = event.target.files[0];
-                            if (file) {
-                                uploadImageAndUpdateSchedule(file, assignment);
-                            }
-                        }}
-                    />
-                    </Button>
+                  <MarkAsDone assignment={assignment} uploadImageAndUpdateSchedule={uploadImageAndUpdateSchedule}></MarkAsDone>
                 )}
                 </TableCell>
+                <TableCell>{assignment.completed_by}</TableCell>
+                <TableCell>{assignment.approved_by}</TableCell>
 
               </TableRow>
             ))

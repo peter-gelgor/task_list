@@ -29,7 +29,7 @@ export const postVal = async (tableName, item) => {
         "TableName": tableName,
         "id": id,
         "attribute": key,
-        "value": value
+        "value": value.toString()
     }
     console.log('update full:', full);
     try {
@@ -216,7 +216,9 @@ export const peopleTasksToDayMap = async (people, tasks) => {
                 'Task': entry.task.S,
                 "done": entry.done.N,
                 "id": entry.id.N,
-                "photo_link": entry.photo_link.S
+                "photo_link": entry.photo_link.S,
+                "approved_by": entry.approved_by.S,
+                "completed_by": entry.completed_by.S
             })
         }
         return map;
@@ -270,7 +272,9 @@ export const peopleTasksToDayMap = async (people, tasks) => {
                         "Task": taskIdToName[taskId],
                         "done": "0",
                         "id": incrementingId,
-                        "photo_link": ""
+                        "photo_link": "",
+                        "approved_by": "Unapproved",
+                        "completed_by": "Incomplete"
                     });
                     assignedTasksPerDay[day].add(taskId);
 
@@ -280,7 +284,9 @@ export const peopleTasksToDayMap = async (people, tasks) => {
                         "person": {"S": person.name},
                         "task": {"S": taskIdToName[taskId]},
                         "done": {"N": "0"},
-                        "photo_link": {"S": ""}
+                        "photo_link": {"S": ""},
+                        "approved_by": {"S": "Unapproved"},
+                        "completed_by": {"S": "Incomplete"}
                     };
                     dbUploads.push(dbEntry);
                     incrementingId++;
