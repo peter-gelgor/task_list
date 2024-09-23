@@ -29,9 +29,8 @@ export const postVal = async (tableName, item) => {
         "TableName": tableName,
         "id": id,
         "attribute": key,
-        "value": value.toString()
+        "value": (key != "availability")?(value.toString()):value
     }
-    console.log('update full:', full);
     try {
         const response = await fetch(`https://s7oq8jma2i.execute-api.us-west-2.amazonaws.com/default/createMappings`, {
             method: 'PUT',
@@ -54,7 +53,6 @@ export const postVal = async (tableName, item) => {
   }
 
   export const uploadImageAndUpdateSchedule = async (image, assignment) => {
-    console.log("assignment:", assignment);
     try {
         const base64Image = await new Promise((resolve, reject) => {
             const reader = new FileReader();

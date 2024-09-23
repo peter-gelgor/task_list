@@ -56,7 +56,6 @@ function PersonTable({ map }) {
                         variant="contained"
                         color="secondary"
                         onClick={() => {
-                          console.log(assignment.photo_link);
                           window.open(assignment.photo_link);
                           setOpen(true);
                         } }
