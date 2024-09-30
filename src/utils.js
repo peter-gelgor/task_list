@@ -130,6 +130,7 @@ export const assignTasks = (people, tasks) => {
     // Convert people and tasks to more manageable formats
     const peopleDict = people.reduce((acc, p) => {
         acc[parseInt(p.id.N)] = {
+            id: parseInt(p.id.N),
             name: p.name.S,
             availability: p.availability.L.map(day => parseInt(day.N)),
             tasks: {}
@@ -152,49 +153,59 @@ export const assignTasks = (people, tasks) => {
     // Add this line to keep track of assigned tasks per day
     const assignedTasksPerDay = Array(7).fill().map(() => new Set());
 
+    // Create an array of people IDs for round-robin assignment
+    const peopleIds = Object.keys(peopleDict);
+    let currentPersonIndex = 0;
+
     for (const [taskId, task] of sortedTasks) {
         let availableDays = Array.from({length: 7}, (_, i) => i);
         for (let i = 0; i < task.frequency; i++) {
-            // Pre-filter eligible people outside of the function declaration
-            const eligiblePeopleArray = Object.values(peopleDict).filter(p => 
-                p.availability.some(day => availableDays.includes(day)));
+            let assigned = false;
+            let attempts = 0;
 
-            if (eligiblePeopleArray.length === 0) {
+            while (!assigned && attempts < peopleIds.length) {
+                const personId = peopleIds[currentPersonIndex];
+                const person = peopleDict[personId];
+
+                // Find available days for this person that haven't been assigned this task
+                const possibleDays = person.availability.filter(day => 
+                    availableDays.includes(day) && !assignedTasksPerDay[day].has(parseInt(taskId))
+                );
+
+                if (possibleDays.length > 0) {
+                    const day = possibleDays[Math.floor(Math.random() * possibleDays.length)];
+
+                    // Assign the task
+                    if (!person.tasks[day]) person.tasks[day] = [];
+                    person.tasks[day].push(parseInt(taskId));
+                    task.assigned++;
+
+                    // Add the task to the set of assigned tasks for this day
+                    assignedTasksPerDay[day].add(parseInt(taskId));
+
+                    assigned = true;
+
+                    // Remove the day from available days if the task needs to be done every day
+                    if (task.frequency === 7) {
+                        availableDays = availableDays.filter(d => d !== day);
+                    }
+                }
+
+                // Move to the next person in the round-robin
+                currentPersonIndex = (currentPersonIndex + 1) % peopleIds.length;
+                attempts++;
+            }
+
+            if (!assigned) {
                 throw new Error(`Unable to assign task ${task.name} on remaining days`);
-            }
-
-            const person = eligiblePeopleArray.reduce((min, p) => 
-                (Object.keys(p.tasks).length / p.availability.length < Object.keys(min.tasks).length / min.availability.length) ? p : min
-            );
-
-            // Modify this part to check if the task has already been assigned on this day
-            const possibleDaysArray = person.availability.filter(day => 
-                availableDays.includes(day) && !assignedTasksPerDay[day].has(parseInt(taskId))
-            );
-
-            if (possibleDaysArray.length === 0) {
-                throw new Error(`No available days for task ${task.name} for person ${person.name}`);
-            }
-
-            const day = possibleDaysArray[Math.floor(Math.random() * possibleDaysArray.length)];
-
-            // Assign the task
-            if (!person.tasks[day]) person.tasks[day] = [];
-            person.tasks[day].push(parseInt(taskId));
-            task.assigned++;
-
-            // Add the task to the set of assigned tasks for this day
-            assignedTasksPerDay[day].add(parseInt(taskId));
-
-            // Remove the day from available days if the task needs to be done every day
-            if (task.frequency === 7) {
-                availableDays = availableDays.filter(d => d !== day);
             }
         }
     }
 
     return peopleDict;
 }
+
+
 
 export const peopleTasksToDayMap = async (people, tasks) => {
     const existingMap = await getTable('Schedule');
