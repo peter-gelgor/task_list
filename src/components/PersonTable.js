@@ -40,6 +40,14 @@ function PersonTable({ map }) {
           value={selectedDay}
           label="Select Day"
           onChange={handleDayChange}
+          sx={{ 
+            width: '200px',
+            height: '36.5px',
+            '& .MuiSelect-select': {
+              paddingTop: '6px',
+              paddingBottom: '7px',
+            }
+          }}
           >
             <MenuItem value="">
               <em>All Days</em>
