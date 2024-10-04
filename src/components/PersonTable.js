@@ -7,7 +7,11 @@ import {
     DialogContentText,
     DialogTitle,
     DialogActions,
-    TextField
+    TextField,
+    FormControl,
+    Select,
+    InputLabel,
+    MenuItem
   } from '@mui/material';
   import CheckIcon from '@mui/icons-material/Check';
 import { updateVal, uploadImageAndUpdateSchedule } from '../utils';
@@ -20,8 +24,36 @@ const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 
 function PersonTable({ map }) {
   const [open, setOpen] = useState(false);
   const [userName, setUserName] = useState('');
+  const [selectedDay, setSelectedDay] = useState('');
+
+  const handleDayChange = (event) => {
+    setSelectedDay(event.target.value);
+  }
 
   return (
+    <>
+      <FormControl margin="normal">
+        <InputLabel id="day-select-label">Select Day</InputLabel>
+        <Select
+          labelId="day-select-label"
+          id="day-select"
+          value={selectedDay}
+          label="Select Day"
+          onChange={handleDayChange}
+          >
+            <MenuItem value="">
+              <em>All Days</em>
+            </MenuItem>
+            {days.map((day) => (
+              <MenuItem key={day} value={day}>
+                {day}
+              </MenuItem>
+            ))}
+          </Select>
+      </FormControl>
+    
+    
+    
     <TableContainer component={Paper}>
       <Table sx={{ minWidth: 650 }} aria-label="task assignment table">
         <TableHead>
@@ -35,8 +67,8 @@ function PersonTable({ map }) {
           </TableRow>
         </TableHead>
         <TableBody>
-          {days.map(day => (
-            map[day] && map[day].map((assignment, index) => (
+          {days.filter(day => selectedDay === '' || day === selectedDay).map(day => (
+              map[day] && map[day].map((assignment, index) => (
               <TableRow key={`${day}-${index}`}>
                 {index === 0 && (
                   <TableCell rowSpan={map[day].length} component="th" scope="row">
@@ -117,6 +149,7 @@ function PersonTable({ map }) {
         </TableBody>
       </Table>
     </TableContainer>
+    </>
   );
 }
 
