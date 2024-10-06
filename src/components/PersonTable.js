@@ -1,67 +1,62 @@
 import React, { useState } from 'react';
 import { 
-    TableContainer, Paper, Table, TableHead, TableBody, 
-    TableRow, TableCell, Button, IconButton, 
-    Dialog,
-    DialogContent,
-    DialogContentText,
-    DialogTitle,
-    DialogActions,
-    TextField,
-    FormControl,
-    Select,
-    InputLabel,
-    MenuItem
+    TableContainer, Paper, 
+    Table, TableHead, TableBody, 
+    TableRow, TableCell
   } from '@mui/material';
-  import CheckIcon from '@mui/icons-material/Check';
-import { updateVal, uploadImageAndUpdateSchedule } from '../utils';
+import { uploadImageAndUpdateSchedule } from '../utils';
+import CustomSelect from './CustomSelect';
+import FinishedCell from './FinishedCell';
 
-import MarkAsDone from './MarkAsDone';
 const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-
-
+const users = ["Peter", "Sara", "Jeff", "James"];
 
 function PersonTable({ map }) {
   const [open, setOpen] = useState(false);
   const [userName, setUserName] = useState('');
   const [selectedDay, setSelectedDay] = useState('');
+  const [selectedUser, setSelectedUser] = useState('')
 
   const handleDayChange = (event) => {
     setSelectedDay(event.target.value);
   }
 
+  const handleUserChange = (event) => {
+    setSelectedUser(event.target.value);
+  }
+
+  const dayHeaderStyle = {
+    fontWeight: 'bold',
+    borderBottom: '2px solid black',
+    backgroundColor: '#f0f0f0', // Optional: adds a light background to distinguish day rows
+  };
+
+  const firstRowStyle = {
+    borderTop: '2px solid black',
+  };
+
   return (
     <>
-      <FormControl margin="normal">
-        <InputLabel id="day-select-label">Select Day</InputLabel>
-        <Select
-          labelId="day-select-label"
-          id="day-select"
-          value={selectedDay}
-          label="Select Day"
-          onChange={handleDayChange}
-          sx={{ 
-            width: '200px',
-            height: '36.5px',
-            '& .MuiSelect-select': {
-              paddingTop: '6px',
-              paddingBottom: '7px',
-            }
-          }}
-          >
-            <MenuItem value="">
-              <em>All Days</em>
-            </MenuItem>
-            {days.map((day) => (
-              <MenuItem key={day} value={day}>
-                {day}
-              </MenuItem>
-            ))}
-          </Select>
-      </FormControl>
+      <CustomSelect 
+        labelId="day-select-label"
+        id="day-select"
+        label="Select Day"
+        value={selectedDay}
+        onChange={handleDayChange}
+        defaultOption="All Days"
+        menuOptions={days}
+      />
+      <CustomSelect
+        labelId="user-select-label"
+        id="user-select"
+        label="Select User"
+        value={selectedUser}
+        onChange={handleUserChange}
+        defaultOption="All Users"
+        menuOptions={users} 
+      />
     
-    
-    
+  
     <TableContainer component={Paper}>
       <Table sx={{ minWidth: 650 }} aria-label="task assignment table">
         <TableHead>
@@ -76,80 +71,33 @@ function PersonTable({ map }) {
         </TableHead>
         <TableBody>
           {days.filter(day => selectedDay === '' || day === selectedDay).map(day => (
-              map[day] && map[day].map((assignment, index) => (
+              map[day] && map[day].filter(assignment => selectedUser === '' || assignment.Person === selectedUser)
+              .map((assignment, index) => (
               <TableRow key={`${day}-${index}`}>
                 {index === 0 && (
-                  <TableCell rowSpan={map[day].length} component="th" scope="row">
+                  <TableCell 
+                    rowSpan={map[day].filter(a => selectedUser === '' || a.Person === selectedUser).length} 
+                    component="th" 
+                    scope="row"
+                    style={dayHeaderStyle}
+                  >
                     {day}
                   </TableCell>
                 )}
-                <TableCell>{assignment.Person}</TableCell>
-                <TableCell>{assignment.Task}</TableCell>
-                <TableCell>
-                {assignment.done === "2" ? (
-                    <IconButton color="primary" aria-label="done">
-                    <CheckIcon />
-                    </IconButton>
-                ) : assignment.done === "1" ? (
-                  <div>
-                    <Button
-                        variant="contained"
-                        color="secondary"
-                        onClick={() => {
-                          window.open(assignment.photo_link);
-                          setOpen(true);
-                        } }
-                      >
-                        Approve
-                      </Button>
-                      <Dialog open={open} onClose={() => setOpen(false)}>
-                      <DialogTitle>Approve Task</DialogTitle>
-                      <DialogContent>
-                        <DialogContentText>
-                          Do you want to approve this task?
-                        </DialogContentText>
-                        <TextField
-                          autoFocus
-                          margin="dense"
-                          id="name"
-                          label="Your name"
-                          type="text"
-                          fullWidth
-                          value={userName}
-                          onChange={(e) => setUserName(e.target.value)}
-                        />
-                      </DialogContent>
-                      <DialogActions>
-                        <Button onClick={async () => {
-                          if (userName !== "") {
-                            await updateVal("Schedule", assignment.id, "approved_by", userName + " (DISAPPROVED)");
-                            await updateVal("Schedule", assignment.id, "done", 0);
-                            window.location.reload();
-                          }
-                          else {
-                            alert("you need to provide your name to disaprove");
-                          }
-                          }}>No</Button>
-                        <Button onClick={async () => {
-                          if (userName !== "") {
-                            await updateVal("Schedule", assignment.id, "approved_by", userName);
-                            await updateVal("Schedule", assignment.id, "done", 2);
-                            window.location.reload();
-                          }
-                          else {
-                            alert("you need to provide your name to approve");
-                          }
-                        }}>Yes</Button>
-                      </DialogActions>
-                    </Dialog>
-                  </div>
-                    
-                ) : (
-                  <MarkAsDone assignment={assignment} uploadImageAndUpdateSchedule={uploadImageAndUpdateSchedule}></MarkAsDone>
-                )}
+                <TableCell style={index === 0 ? firstRowStyle : null}>{assignment.Person}</TableCell>
+                <TableCell style={index === 0 ? firstRowStyle : null}>{assignment.Task}</TableCell>
+                <TableCell style={index === 0 ? firstRowStyle : null}>
+                  <FinishedCell 
+                    assignment={assignment} 
+                    setOpen={setOpen}
+                    open={open}
+                    setUserName={setUserName}
+                    userName={userName}
+                    uploadImageAndUpdateSchedule={uploadImageAndUpdateSchedule}
+                  />
                 </TableCell>
-                <TableCell>{assignment.completed_by}</TableCell>
-                <TableCell>{assignment.approved_by}</TableCell>
+                <TableCell style={index === 0 ? firstRowStyle : null}>{assignment.completed_by}</TableCell>
+                <TableCell style={index === 0 ? firstRowStyle : null}>{assignment.approved_by}</TableCell>
 
               </TableRow>
             ))
